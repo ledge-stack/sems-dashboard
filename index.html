@@ -3,138 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEMS Advanced Live Command Center</title>
+    <title>SEMS Enterprise Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-slate-950 text-white font-sans min-h-screen flex flex-col justify-between">
 
-    <header class="bg-slate-900 p-6 shadow-xl border-b border-slate-800">
-        <div class="container mx-auto flex justify-between items-center">
+    <header class="bg-slate-900 p-4 sm:p-6 shadow-xl border-b border-slate-800 sticky top-0 z-50">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
             <div>
-                <h1 class="text-2xl font-black tracking-wider text-emerald-400">SEMS PANEL</h1>
-                <p class="text-slate-500 text-xs mt-1">Smart Electricity Management System | Group 8</p>
+                <h1 class="text-xl sm:text-2xl font-black tracking-wider text-emerald-400 flex items-center gap-2">
+                    SEMS PANEL <span class="text-[10px] font-normal text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">v2.3</span>
+                </h1>
+                <p class="text-slate-500 text-xs mt-1">Smart Electricity Management System | Group 8 (CoCIS Jinja)</p>
             </div>
-            <span class="px-3 py-1 rounded-full text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 animate-pulse">Live Server Connected</span>
+            <span class="px-3 py-1 rounded-full text-[10px] sm:text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 animate-pulse self-start sm:self-auto">
+                Live Server Connected
+            </span>
         </div>
     </header>
 
-    <main class="container mx-auto p-6 flex-grow space-y-6">
+    <main class="container mx-auto p-4 sm:p-6 flex-grow space-y-6">
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
-                <h2 class="text-slate-500 font-semibold uppercase text-xs">Room Status</h2>
-                <div class="my-4">
-                    <span id="roomStatus" class="text-3xl font-extrabold text-rose-500">VACANT</span>
+            <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 flex flex-col justify-between min-h-[140px]">
+                <div>
+                    <h2 class="text-slate-500 font-semibold uppercase text-xs">Room Status</h2>
+                    <div class="my-3">
+                        <span id="roomStatus" class="text-2xl sm:text-3xl font-extrabold text-rose-500">VACANT</span>
+                    </div>
                 </div>
-                <p class="text-slate-600 text-[10px]">Updated via Bluetooth/Manual exit</p>
+                <div>
+                    <span class="text-[9px] text-slate-500 block uppercase font-bold">Active Occupant:</span>
+                    <span id="occupantName" class="text-xs text-slate-300 font-semibold truncate block">None (Room Unlocked)</span>
+                </div>
             </div>
 
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+            <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 flex flex-col justify-between min-h-[140px]">
                 <h2 class="text-slate-500 font-semibold uppercase text-xs">Current Load</h2>
-                <div class="my-4 flex items-baseline space-x-1">
-                    <span id="currentLoad" class="text-4xl font-extrabold text-sky-400">0.000</span>
-                    <span class="text-slate-500 text-sm font-semibold">Amps</span>
+                <div class="my-3 flex items-baseline space-x-1">
+                    <span id="currentLoad" class="text-3xl sm:text-4xl font-extrabold text-sky-400">0.000</span>
+                    <span class="text-slate-500 text-xs sm:text-sm font-semibold">Amps</span>
                 </div>
                 <p class="text-slate-600 text-[10px]">Live ACS712 Hall-effect data</p>
             </div>
 
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
-                <h2 class="text-slate-500 font-semibold uppercase text-xs">Active Power</h2>
-                <div class="my-4 flex items-baseline space-x-1">
-                    <span id="activePower" class="text-4xl font-extrabold text-amber-400">0.0</span>
-                    <span class="text-slate-500 text-sm font-semibold">Watts</span>
+            <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 flex flex-col justify-between min-h-[140px]">
+                <div>
+                    <h2 class="text-slate-500 font-semibold uppercase text-xs">Active Power</h2>
+                    <div class="my-2 flex items-baseline space-x-1">
+                        <span id="activePower" class="text-3xl sm:text-4xl font-extrabold text-amber-400">0.0</span>
+                        <span class="text-slate-500 text-xs sm:text-sm font-semibold">Watts</span>
+                    </div>
                 </div>
-                <p class="text-slate-600 text-[10px]">Calculated as Amps × 240V</p>
+                <div class="text-[10px] text-slate-500 border-t border-slate-800/60 pt-2 flex justify-between">
+                    <span>Session Peak:</span>
+                    <span id="peakPower" class="font-bold text-amber-500">0.0 W</span>
+                </div>
             </div>
 
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
-                <div class="flex justify-between items-center">
+            <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 flex flex-col justify-between min-h-[140px]">
+                <div class="flex justify-between items-center gap-2">
                     <h2 class="text-slate-500 font-semibold uppercase text-xs">Estimated Cost</h2>
-                    <select id="tariffSelect" class="bg-slate-950 text-emerald-400 text-[10px] rounded border border-slate-800 p-1 focus:outline-none">
+                    <select id="tariffSelect" class="bg-slate-950 text-emerald-400 text-[10px] rounded border border-slate-800 p-1 focus:outline-none cursor-pointer">
                         <option value="779.4">Domestic (779.4 UGX)</option>
                         <option value="562.1" selected>Commercial (562.1 UGX)</option>
                     </select>
                 </div>
-                <div class="my-4 flex items-baseline space-x-1">
-                    <span id="costEst" class="text-4xl font-extrabold text-emerald-400">0.0</span>
-                    <span class="text-slate-500 text-sm font-semibold">UGX / hr</span>
+                <div class="my-3 flex items-baseline space-x-1">
+                    <span id="costEst" class="text-3xl sm:text-4xl font-extrabold text-emerald-400">0.0</span>
+                    <span class="text-slate-500 text-xs sm:text-sm font-semibold">UGX / hr</span>
                 </div>
                 <p class="text-slate-600 text-[10px]">Based on official Q3 2026 UEDCL Tariffs</p>
             </div>
 
         </div>
 
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+        <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-rose-500/20 bg-gradient-to-r from-slate-900 to-rose-950/10">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 class="text-slate-400 font-bold text-sm uppercase">Simulated Yaka Meter (Prepaid)</h2>
-                    <p class="text-slate-500 text-xs mt-1">Drains actively as load is drawn. Simulates automatic isolation when empty.</p>
+                    <h2 class="text-rose-400 font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+                        ⚠️ Remote Emergency Master Control
+                    </h2>
+                    <p class="text-slate-400 text-xs mt-1">
+                        Instantly cut or restore main utility power to all relays and devices in the facility.
+                    </p>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <input id="yakaTopUpAmount" type="number" placeholder="Amt (UGX)" class="bg-slate-950 border border-slate-800 text-xs px-3 py-2 rounded-lg focus:outline-none w-28 text-emerald-400">
-                    <button onclick="topUpYaka()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg text-xs transition">Top Up Meter</button>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-slate-800/50">
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-900">
-                    <span class="text-slate-500 text-[10px] uppercase font-bold block mb-1">Available Credit</span>
-                    <span id="yakaBalanceDisplay" class="text-2xl font-black text-emerald-400">10,000.00</span> <span class="text-slate-500 text-xs font-bold">UGX</span>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-900">
-                    <span class="text-slate-500 text-[10px] uppercase font-bold block mb-1">Estimated Units Left</span>
-                    <span id="yakaUnitsDisplay" class="text-2xl font-black text-amber-400">17.79</span> <span class="text-slate-500 text-xs font-bold">kWh</span>
-                </div>
-                <div id="yakaAlertCard" class="bg-slate-950 p-4 rounded-xl border border-slate-900 flex flex-col justify-center">
-                    <span class="text-slate-500 text-[10px] uppercase font-bold block mb-1">Status</span>
-                    <span id="yakaStatusDisplay" class="text-lg font-bold text-emerald-500">METER HEALTHY</span>
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <button onclick="globalPowerRestore()" class="w-full sm:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-750 text-emerald-400 border border-slate-700 font-bold rounded-xl text-xs transition active:scale-95">
+                        ⚡ Restore Grid Power
+                    </button>
+                    <button onclick="globalPowerOff()" class="w-full sm:w-auto px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs shadow-lg shadow-rose-950/50 transition active:scale-95">
+                        🛑 EMERGENCY MASTER SHUTDOWN
+                    </button>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 lg:col-span-2">
+            <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 lg:col-span-2 flex flex-col justify-between">
                 <h2 class="text-slate-400 font-bold text-sm uppercase mb-4">Energy Consumption History</h2>
-                <div class="h-64">
+                <div class="relative w-full h-48 sm:h-64 md:h-72 lg:h-80">
                     <canvas id="energyChart"></canvas>
                 </div>
             </div>
 
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+            <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 flex flex-col justify-between gap-6">
                 <div>
-                    <h2 class="text-slate-400 font-bold text-sm uppercase mb-6">Hardware Remote Controls</h2>
+                    <h2 class="text-slate-400 font-bold text-sm uppercase mb-4">Hardware Remote Controls</h2>
                     
                     <div class="flex justify-between items-center bg-slate-950 p-4 rounded-xl border border-slate-800 mb-4">
                         <div>
                             <span class="font-bold block text-sm">Zone 1: Lighting Grid</span>
-                            <span class="text-[10px] text-slate-500">Relay Channel 1</span>
+                            <div class="flex items-center gap-1.5 mt-1">
+                                <span class="text-[10px] text-slate-500">Relay 1:</span>
+                                <span id="lightsState" class="text-[10px] font-bold text-rose-500 uppercase">OFF</span>
+                            </div>
                         </div>
-                        <button onclick="toggleRelay('lights')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 border border-slate-700 hover:border-emerald-500/30 rounded-lg text-xs font-bold transition">Toggle</button>
+                        <button onclick="toggleRelay('lights')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-750 rounded-lg text-xs font-bold transition active:scale-95">
+                            Toggle
+                        </button>
                     </div>
 
                     <div class="flex justify-between items-center bg-slate-950 p-4 rounded-xl border border-slate-800">
                         <div>
                             <span class="font-bold block text-sm">Zone 2: Air Conditioning</span>
-                            <span class="text-[10px] text-slate-500">Relay Channel 2</span>
+                            <div class="flex items-center gap-1.5 mt-1">
+                                <span class="text-[10px] text-slate-500">Relay 2:</span>
+                                <span id="acState" class="text-[10px] font-bold text-rose-500 uppercase">OFF</span>
+                            </div>
                         </div>
-                        <button onclick="toggleRelay('ac')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 border border-slate-700 hover:border-emerald-500/30 rounded-lg text-xs font-bold transition">Toggle</button>
+                        <button onclick="toggleRelay('ac')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-750 rounded-lg text-xs font-bold transition active:scale-95">
+                            Toggle
+                        </button>
                     </div>
                 </div>
 
-                <div class="text-[10px] text-slate-600 mt-4">
-                    * Manual hardware switches bypass automated shutdown intervals during overrides.
+                <div class="text-[10px] text-slate-600 leading-relaxed">
+                    * Controls use Device State Sync. Button commands wait for Arduino hardware confirmation signals before modifying state UI.
                 </div>
             </div>
 
         </div>
 
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="text-slate-400 font-bold text-sm uppercase">Live System Terminal logs</h2>
-                <button onclick="exportLogsToCSV()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+        <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+                <h2 class="text-slate-400 font-bold text-sm uppercase">Live System Terminal Logs</h2>
+                <button onclick="exportLogsToCSV()" class="w-full sm:w-auto px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 border border-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1">
                     <span>📥 Export Logs to CSV</span>
                 </button>
             </div>
@@ -153,25 +171,31 @@
         const socket = io();
         const logConsole = document.getElementById('logConsole');
         const roomStatus = document.getElementById('roomStatus');
+        const occupantName = document.getElementById('occupantName');
         const currentLoad = document.getElementById('currentLoad');
         const activePower = document.getElementById('activePower');
+        const peakPower = document.getElementById('peakPower');
         const costEst = document.getElementById('costEst');
         
-        // Yaka Variables
-        let yakaBalance = 10000.00; // Starting credit: 10,000 UGX
-        let currentTariff = 562.1; // Default to Commercial rate
-        const yakaBalanceDisplay = document.getElementById('yakaBalanceDisplay');
-        const yakaUnitsDisplay = document.getElementById('yakaUnitsDisplay');
-        const yakaStatusDisplay = document.getElementById('yakaStatusDisplay');
-        const yakaAlertCard = document.getElementById('yakaAlertCard');
+        // Status Sync Elements
+        const lightsState = document.getElementById('lightsState');
+        const acState = document.getElementById('acState');
 
-        // Local array to hold raw logs for CSV export
+        let currentTariff = 562.1; 
+        let peakWatts = 0.0;
         const logHistory = [];
 
-        // Append events to console & log list
+        // USER DATABASE (RFID mappings)
+        const userDatabase = {
+            "0xE4 0x9F 0xEE 0xE5": "Arinda (Group Member 1)",
+            "0xD5 0x78 0x05 0x9E": "Mugisha (Group Member 2)",
+            "Blue Tag": "Arinda (Group Member 1)",
+            "White Card": "Mugisha (Group Member 2)"
+        };
+
         function appendLog(message) {
             const time = new Date().toLocaleTimeString();
-            logHistory.push({ time, message: message.replace(/<[^>]*>/g, '') }); // strip HTML tags for CSV
+            logHistory.push({ time, message: message.replace(/<[^>]*>/g, '') });
             
             const logEntry = document.createElement('div');
             logEntry.innerHTML = `<span class="text-slate-600">[${time}]</span> ${message}`;
@@ -179,12 +203,152 @@
             logConsole.scrollTop = logConsole.scrollHeight;
         }
 
-        // Send control messages to Node.js backend
+        // Toggles a single relay zone
         function toggleRelay(zone) {
             socket.emit('relay-control', zone);
             appendLog(`[COMMAND SENT] Manual override toggled for: ${zone.toUpperCase()}`);
         }
 
-        // Export Live Logs to CSV File
+        // Emergency Remote Power Cuts
+        function globalPowerOff() {
+            socket.emit('relay-control', 'all-off');
+            appendLog(`<span class="text-rose-500 font-bold">[REMOTE ACTIONS] Broadcasted EMERGENCY MASTER SHUTDOWN.</span>`);
+        }
+
+        function globalPowerRestore() {
+            socket.emit('relay-control', 'restore-power');
+            appendLog(`<span class="text-emerald-400 font-bold">[REMOTE ACTIONS] Main Power grid signal restored.</span>`);
+        }
+
+        // Export Logs to CSV
         function exportLogsToCSV() {
-            if (logHistory.length === 0) return alert("No logs recorded
+            if (logHistory.length === 0) return alert("No logs recorded yet!");
+            let csvContent = "data:text/csv;charset=utf-8,Time,Event Description\n";
+            logHistory.forEach(log => {
+                csvContent += `"${log.time}","${log.message.replace(/"/g, '""')}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `SEMS_Access_Logs_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Watch tariff selection changes
+        document.getElementById('tariffSelect').addEventListener('change', (e) => {
+            currentTariff = parseFloat(e.target.value);
+            appendLog(`[SYSTEM] Billing tariff adjusted to ${currentTariff} UGX per kWh.`);
+        });
+
+        // Initialize Chart.js Graph
+        const ctx = document.getElementById('energyChart').getContext('2d');
+        const energyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], 
+                datasets: [{
+                    label: 'Active Load (Watts)',
+                    data: [],
+                    borderColor: '#10b981',
+                    borderWidth: 2,
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } },
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#64748b' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Receive real-time socket events from your server.js
+        socket.on('arduino-data', (data) => {
+            appendLog(data);
+
+            // 1. Parse Status and Identify Occupants
+            if (data.includes("Access Authorized") || data.includes("Room Occupied")) {
+                roomStatus.innerText = "OCCUPIED";
+                roomStatus.className = "text-2xl sm:text-3xl font-extrabold text-emerald-400";
+                
+                let matchedName = "Authorized Visitor";
+                for (const [key, value] of Object.entries(userDatabase)) {
+                    if (data.includes(key)) {
+                        matchedName = value;
+                        break;
+                    }
+                }
+                occupantName.innerText = matchedName;
+            } 
+            else if (data.includes("Vacation rule") || data.includes("Room Vacant")) {
+                roomStatus.innerText = "VACANT";
+                roomStatus.className = "text-2xl sm:text-3xl font-extrabold text-rose-500";
+                occupantName.innerText = "None (Room Unlocked)";
+                
+                currentLoad.innerText = "0.000";
+                activePower.innerText = "0.0";
+                costEst.innerText = "0.0";
+            }
+
+            // 2. DEVICE STATE SYNCHRONIZATION (Listen to hardware feedbacks)
+            if (data.includes("RELAY1:ON") || data.includes("[SYNC] Zone 1 ON")) {
+                lightsState.innerText = "ON";
+                lightsState.className = "text-[10px] font-bold text-emerald-400 uppercase";
+            } else if (data.includes("RELAY1:OFF") || data.includes("[SYNC] Zone 1 OFF")) {
+                lightsState.innerText = "OFF";
+                lightsState.className = "text-[10px] font-bold text-rose-500 uppercase";
+            }
+
+            if (data.includes("RELAY2:ON") || data.includes("[SYNC] Zone 2 ON")) {
+                acState.innerText = "ON";
+                acState.className = "text-[10px] font-bold text-emerald-400 uppercase";
+            } else if (data.includes("RELAY2:OFF") || data.includes("[SYNC] Zone 2 OFF")) {
+                acState.innerText = "OFF";
+                acState.className = "text-[10px] font-bold text-rose-500 uppercase";
+            }
+
+            // Global Cut feedbacks
+            if (data.includes("GLOBAL_CUT:ON")) {
+                lightsState.innerText = "OFF";
+                lightsState.className = "text-[10px] font-bold text-rose-500 uppercase";
+                acState.innerText = "OFF";
+                acState.className = "text-[10px] font-bold text-rose-500 uppercase";
+            }
+
+            // 3. Current Draw Parsing
+            if (data.startsWith("AMPS:")) {
+                const amps = parseFloat(data.split(":")[1]);
+                const activeWatts = amps * 240.0; 
+                const ugxPerHour = (activeWatts / 1000.0) * currentTariff;
+
+                currentLoad.innerText = amps.toFixed(3);
+                activePower.innerText = activeWatts.toFixed(1);
+                costEst.innerText = ugxPerHour.toFixed(1);
+
+                // Peak tracking logic
+                if (activeWatts > peakWatts) {
+                    peakWatts = activeWatts;
+                    peakPower.innerText = `${peakWatts.toFixed(1)} W`;
+                }
+
+                // Update Chart
+                const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                if (energyChart.data.labels.length > 10) {
+                    energyChart.data.labels.shift();
+                    energyChart.data.datasets[0].data.shift();
+                }
+                energyChart.data.labels.push(now);
+                energyChart.data.datasets[0].data.push(activeWatts);
+                energyChart.update();
+            }
+        });
+    </script>
+</body>
+</html>

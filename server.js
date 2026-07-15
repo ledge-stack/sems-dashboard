@@ -13,10 +13,14 @@ app.use(express.static(__dirname));
 let arduinoPort = null;
 let parser = null;
 let isSimulating = false;
+let virtualOccupied = true;
+let masterPowerActive = true; 
 
-// --- CONNECT TO ARDUINO ---
+// Relay tracking states
+let relay1State = "OFF";
+let relay2State = "OFF";
+
 try {
-    // Change 'COM3' to your actual port when hardware is connected
     arduinoPort = new SerialPort({ path: 'COM3', baudRate: 9600 });
     parser = arduinoPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
     
@@ -31,19 +35,17 @@ try {
     });
 
 } catch (error) {
-    console.log("⚠️ No Arduino detected on this port. Switching to Simulation Mode.");
+    console.log("⚠️ No Arduino detected. Switching to Simulation Mode.");
     startSimulation();
 }
 
-// --- SIMULATION MODE (For Offline Development) ---
 function startSimulation() {
     isSimulating = true;
     console.log("✨ Simulation Mode Active. Generating virtual SEMS data...");
     
-    // Simulate room being occupied/vacated every 30 seconds
-    let virtualOccupied = true;
-    
     setInterval(() => {
+        if (!masterPowerActive) return;
+        
         virtualOccupied = !virtualOccupied;
         if (virtualOccupied) {
             io.emit('arduino-data', "Room Occupied");
@@ -54,11 +56,19 @@ function startSimulation() {
         }
     }, 30000);
 
-    // Simulate real-time current draw fluctuations (AMPS:X.XX) every 2 seconds
+    // Simulate current draw fluctuations
     setInterval(() => {
+        if (!masterPowerActive) {
+            io.emit('arduino-data', "AMPS:0.000");
+            return;
+        }
+
         if (virtualOccupied) {
-            // Generate a random load between 0.2A and 1.8A
-            const simulatedAmps = (Math.random() * 1.6 + 0.2).toFixed(3);
+            let baseDraw = 0.05;
+            if (relay1State === "ON") baseDraw += 0.45;
+            if (relay2State === "ON") baseDraw += 1.15;
+            
+            const simulatedAmps = (baseDraw + Math.random() * 0.1).toFixed(3);
             io.emit('arduino-data', `AMPS:${simulatedAmps}`);
         } else {
             io.emit('arduino-data', "AMPS:0.000");
@@ -66,22 +76,40 @@ function startSimulation() {
     }, 2000);
 }
 
-// --- FRONTEND TO BACKEND CONTROLS ---
 io.on('connection', (socket) => {
-    console.log('🔌 Web browser connected to backend.');
+    console.log('🔌 Web browser connected.');
 
-    // Listen for manual relay toggles from the webpage
+    // Device state feedback simulation helper
     socket.on('relay-control', (zone) => {
         console.log(`[Web Override Command]: Toggle ${zone}`);
 
+        if (zone === 'all-off') {
+            masterPowerActive = false;
+            relay1State = "OFF";
+            relay2State = "OFF";
+            io.emit('arduino-data', "[EMERGENCY] Global power cut initiated.");
+            io.emit('arduino-data', "GLOBAL_CUT:ON"); 
+            io.emit('arduino-data', "Room Vacant");
+            io.emit('arduino-data', "AMPS:0.000");
+        } else if (zone === 'restore-power') {
+            masterPowerActive = true;
+            io.emit('arduino-data', "[SYSTEM] Global grid power restored.");
+        } else if (zone === 'lights' && masterPowerActive) {
+            relay1State = (relay1State === "ON") ? "OFF" : "ON";
+            io.emit('arduino-data', `[SYNC] Zone 1 ${relay1State}`);
+        } else if (zone === 'ac' && masterPowerActive) {
+            relay2State = (relay2State === "ON") ? "OFF" : "ON";
+            io.emit('arduino-data', `[SYNC] Zone 2 ${relay2State}`);
+        }
+
         if (!isSimulating && arduinoPort && arduinoPort.writable) {
-            // Send a character key to Arduino over Serial
-            // 'L' for Lights toggle, 'A' for AC toggle
-            const command = (zone === 'lights') ? 'L' : 'A';
+            let command = '';
+            if (zone === 'lights') command = 'L';
+            else if (zone === 'ac') command = 'A';
+            else if (zone === 'all-off') command = 'Q'; 
+            else if (zone === 'restore-power') command = 'R'; 
+            
             arduinoPort.write(command);
-        } else {
-            // Simulate the physical hardware feedback locally
-            io.emit('arduino-data', `[SIM OVERRIDE] Power toggled on Zone: ${zone.toUpperCase()}`);
         }
     });
 });
