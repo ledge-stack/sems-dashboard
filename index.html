@@ -24,7 +24,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
                 <h2 class="text-slate-500 font-semibold uppercase text-xs">Room Status</h2>
                 <div class="my-4">
                     <span id="roomStatus" class="text-3xl font-extrabold text-rose-500">VACANT</span>
@@ -32,7 +32,7 @@
                 <p class="text-slate-600 text-[10px]">Updated via Bluetooth/Manual exit</p>
             </div>
 
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
                 <h2 class="text-slate-500 font-semibold uppercase text-xs">Current Load</h2>
                 <div class="my-4 flex items-baseline space-x-1">
                     <span id="currentLoad" class="text-4xl font-extrabold text-sky-400">0.000</span>
@@ -41,7 +41,7 @@
                 <p class="text-slate-600 text-[10px]">Live ACS712 Hall-effect data</p>
             </div>
 
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
                 <h2 class="text-slate-500 font-semibold uppercase text-xs">Active Power</h2>
                 <div class="my-4 flex items-baseline space-x-1">
                     <span id="activePower" class="text-4xl font-extrabold text-amber-400">0.0</span>
@@ -50,15 +50,48 @@
                 <p class="text-slate-600 text-[10px]">Calculated as Amps × 240V</p>
             </div>
 
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <h2 class="text-slate-500 font-semibold uppercase text-xs">Estimated Cost</h2>
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-slate-500 font-semibold uppercase text-xs">Estimated Cost</h2>
+                    <select id="tariffSelect" class="bg-slate-950 text-emerald-400 text-[10px] rounded border border-slate-800 p-1 focus:outline-none">
+                        <option value="779.4">Domestic (779.4 UGX)</option>
+                        <option value="562.1" selected>Commercial (562.1 UGX)</option>
+                    </select>
+                </div>
                 <div class="my-4 flex items-baseline space-x-1">
                     <span id="costEst" class="text-4xl font-extrabold text-emerald-400">0.0</span>
                     <span class="text-slate-500 text-sm font-semibold">UGX / hr</span>
                 </div>
-                <p class="text-slate-600 text-[10px]">Based on commercial tariffs</p>
+                <p class="text-slate-600 text-[10px]">Based on official Q3 2026 UEDCL Tariffs</p>
             </div>
 
+        </div>
+
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+                <div>
+                    <h2 class="text-slate-400 font-bold text-sm uppercase">Simulated Yaka Meter (Prepaid)</h2>
+                    <p class="text-slate-500 text-xs mt-1">Drains actively as load is drawn. Simulates automatic isolation when empty.</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <input id="yakaTopUpAmount" type="number" placeholder="Amt (UGX)" class="bg-slate-950 border border-slate-800 text-xs px-3 py-2 rounded-lg focus:outline-none w-28 text-emerald-400">
+                    <button onclick="topUpYaka()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg text-xs transition">Top Up Meter</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-slate-800/50">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-900">
+                    <span class="text-slate-500 text-[10px] uppercase font-bold block mb-1">Available Credit</span>
+                    <span id="yakaBalanceDisplay" class="text-2xl font-black text-emerald-400">10,000.00</span> <span class="text-slate-500 text-xs font-bold">UGX</span>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-900">
+                    <span class="text-slate-500 text-[10px] uppercase font-bold block mb-1">Estimated Units Left</span>
+                    <span id="yakaUnitsDisplay" class="text-2xl font-black text-amber-400">17.79</span> <span class="text-slate-500 text-xs font-bold">kWh</span>
+                </div>
+                <div id="yakaAlertCard" class="bg-slate-950 p-4 rounded-xl border border-slate-900 flex flex-col justify-center">
+                    <span class="text-slate-500 text-[10px] uppercase font-bold block mb-1">Status</span>
+                    <span id="yakaStatusDisplay" class="text-lg font-bold text-emerald-500">METER HEALTHY</span>
+                </div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -99,7 +132,12 @@
         </div>
 
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-            <h2 class="text-slate-400 font-bold text-sm uppercase mb-3">Live System Terminal logs</h2>
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-slate-400 font-bold text-sm uppercase">Live System Terminal logs</h2>
+                <button onclick="exportLogsToCSV()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                    <span>📥 Export Logs to CSV</span>
+                </button>
+            </div>
             <div id="logConsole" class="bg-slate-950 p-4 rounded-xl h-40 font-mono text-xs overflow-y-auto text-emerald-500 border border-slate-900 space-y-1">
                 <div>[SYSTEM INITIALIZATION] Waiting for Arduino handshake...</div>
             </div>
@@ -118,10 +156,23 @@
         const currentLoad = document.getElementById('currentLoad');
         const activePower = document.getElementById('activePower');
         const costEst = document.getElementById('costEst');
+        
+        // Yaka Variables
+        let yakaBalance = 10000.00; // Starting credit: 10,000 UGX
+        let currentTariff = 562.1; // Default to Commercial rate
+        const yakaBalanceDisplay = document.getElementById('yakaBalanceDisplay');
+        const yakaUnitsDisplay = document.getElementById('yakaUnitsDisplay');
+        const yakaStatusDisplay = document.getElementById('yakaStatusDisplay');
+        const yakaAlertCard = document.getElementById('yakaAlertCard');
 
-        // Append events to console
+        // Local array to hold raw logs for CSV export
+        const logHistory = [];
+
+        // Append events to console & log list
         function appendLog(message) {
             const time = new Date().toLocaleTimeString();
+            logHistory.push({ time, message: message.replace(/<[^>]*>/g, '') }); // strip HTML tags for CSV
+            
             const logEntry = document.createElement('div');
             logEntry.innerHTML = `<span class="text-slate-600">[${time}]</span> ${message}`;
             logConsole.appendChild(logEntry);
@@ -134,74 +185,6 @@
             appendLog(`[COMMAND SENT] Manual override toggled for: ${zone.toUpperCase()}`);
         }
 
-        // Initialize Chart.js Graph
-        const ctx = document.getElementById('energyChart').getContext('2d');
-        const energyChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [], // Time labels will push here
-                datasets: [{
-                    label: 'Active Load (Watts)',
-                    data: [],
-                    borderColor: '#10b981',
-                    borderWidth: 2,
-                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#64748b' } },
-                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#64748b' } }
-                },
-                plugins: { legend: { display: false } }
-            }
-        });
-
-        // Receive real-time socket events from your server.js
-        socket.on('arduino-data', (data) => {
-            appendLog(data);
-
-            // 1. Parse Status
-            if (data.includes("Access Authorized") || data.includes("Room Occupied")) {
-                roomStatus.innerText = "OCCUPIED";
-                roomStatus.className = "text-3xl font-extrabold text-emerald-400";
-            } 
-            else if (data.includes("Vacation rule") || data.includes("Room Vacant")) {
-                roomStatus.innerText = "VACANT";
-                roomStatus.className = "text-3xl font-extrabold text-rose-500";
-                
-                // Reset power indicators if room turns off
-                currentLoad.innerText = "0.000";
-                activePower.innerText = "0.0";
-                costEst.innerText = "0.0";
-            }
-
-            // 2. Parse Current draw ("AMPS:X.XX")
-            if (data.startsWith("AMPS:")) {
-                const amps = parseFloat(data.split(":")[1]);
-                const watts = amps * 240.0; 
-                const tariff = 800; // Let's estimate 800 UGX per kWh as an example
-                const ugxPerHour = (watts / 1000.0) * tariff;
-
-                currentLoad.innerText = amps.toFixed(3);
-                activePower.innerText = watts.toFixed(1);
-                costEst.innerText = ugxPerHour.toFixed(1);
-
-                // Update Real-time Chart
-                const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                if (energyChart.data.labels.length > 10) {
-                    energyChart.data.labels.shift();
-                    energyChart.data.datasets[0].data.shift();
-                }
-                energyChart.data.labels.push(now);
-                energyChart.data.datasets[0].data.push(watts);
-                energyChart.update();
-            }
-        });
-    </script>
-</body>
-</html>
+        // Export Live Logs to CSV File
+        function exportLogsToCSV() {
+            if (logHistory.length === 0) return alert("No logs recorded
