@@ -3,48 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEMS Live Dashboard</title>
+    <title>SEMS Advanced Live Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-slate-900 text-white font-sans min-h-screen flex flex-col justify-between">
+<body class="bg-slate-950 text-white font-sans min-h-screen flex flex-col justify-between">
 
-    <header class="bg-slate-800 p-6 shadow-md border-b border-slate-700">
+    <header class="bg-slate-900 p-6 shadow-xl border-b border-slate-800">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold tracking-wide text-emerald-400">SEMS Panel</h1>
-            <span class="px-3 py-1 rounded-full text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">Live Server Connected</span>
+            <div>
+                <h1 class="text-2xl font-black tracking-wider text-emerald-400">SEMS PANEL</h1>
+                <p class="text-slate-500 text-xs mt-1">Smart Electricity Management System | Group 8</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 animate-pulse">Live Server Connected</span>
         </div>
     </header>
 
-    <main class="container mx-auto p-6 flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <main class="container mx-auto p-6 flex-grow space-y-6">
         
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 flex flex-col justify-between">
-            <h2 class="text-slate-400 font-semibold uppercase text-sm">Room Status</h2>
-            <div class="my-6">
-                <span id="roomStatus" class="text-4xl font-extrabold text-amber-500">UNKNOWN</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <h2 class="text-slate-500 font-semibold uppercase text-xs">Room Status</h2>
+                <div class="my-4">
+                    <span id="roomStatus" class="text-3xl font-extrabold text-rose-500">VACANT</span>
+                </div>
+                <p class="text-slate-600 text-[10px]">Updated via Bluetooth/Manual exit</p>
             </div>
-            <p class="text-slate-500 text-xs">Monitored via BT & Manual switches</p>
+
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <h2 class="text-slate-500 font-semibold uppercase text-xs">Current Load</h2>
+                <div class="my-4 flex items-baseline space-x-1">
+                    <span id="currentLoad" class="text-4xl font-extrabold text-sky-400">0.000</span>
+                    <span class="text-slate-500 text-sm font-semibold">Amps</span>
+                </div>
+                <p class="text-slate-600 text-[10px]">Live ACS712 Hall-effect data</p>
+            </div>
+
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <h2 class="text-slate-500 font-semibold uppercase text-xs">Active Power</h2>
+                <div class="my-4 flex items-baseline space-x-1">
+                    <span id="activePower" class="text-4xl font-extrabold text-amber-400">0.0</span>
+                    <span class="text-slate-500 text-sm font-semibold">Watts</span>
+                </div>
+                <p class="text-slate-600 text-[10px]">Calculated as Amps × 240V</p>
+            </div>
+
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <h2 class="text-slate-500 font-semibold uppercase text-xs">Estimated Cost</h2>
+                <div class="my-4 flex items-baseline space-x-1">
+                    <span id="costEst" class="text-4xl font-extrabold text-emerald-400">0.0</span>
+                    <span class="text-slate-500 text-sm font-semibold">UGX / hr</span>
+                </div>
+                <p class="text-slate-600 text-[10px]">Based on commercial tariffs</p>
+            </div>
+
         </div>
 
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 flex flex-col justify-between">
-            <h2 class="text-slate-400 font-semibold uppercase text-sm">Real-time Load</h2>
-            <div class="my-6">
-                <span id="currentLoad" class="text-5xl font-extrabold text-sky-400">0.00</span> <span class="text-slate-400 font-medium text-lg">Amps</span>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 lg:col-span-2">
+                <h2 class="text-slate-400 font-bold text-sm uppercase mb-4">Energy Consumption History</h2>
+                <div class="h-64">
+                    <canvas id="energyChart"></canvas>
+                </div>
             </div>
-            <p class="text-slate-500 text-xs">Updated via analog current sensor</p>
+
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-slate-400 font-bold text-sm uppercase mb-6">Hardware Remote Controls</h2>
+                    
+                    <div class="flex justify-between items-center bg-slate-950 p-4 rounded-xl border border-slate-800 mb-4">
+                        <div>
+                            <span class="font-bold block text-sm">Zone 1: Lighting Grid</span>
+                            <span class="text-[10px] text-slate-500">Relay Channel 1</span>
+                        </div>
+                        <button onclick="toggleRelay('lights')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 border border-slate-700 hover:border-emerald-500/30 rounded-lg text-xs font-bold transition">Toggle</button>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <div>
+                            <span class="font-bold block text-sm">Zone 2: Air Conditioning</span>
+                            <span class="text-[10px] text-slate-500">Relay Channel 2</span>
+                        </div>
+                        <button onclick="toggleRelay('ac')" class="px-4 py-2 bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 border border-slate-700 hover:border-emerald-500/30 rounded-lg text-xs font-bold transition">Toggle</button>
+                    </div>
+                </div>
+
+                <div class="text-[10px] text-slate-600 mt-4">
+                    * Manual hardware switches bypass automated shutdown intervals during overrides.
+                </div>
+            </div>
+
         </div>
 
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 flex flex-col h-64 md:h-auto">
-            <h2 class="text-slate-400 font-semibold uppercase text-sm mb-4">Event Logs</h2>
-            <div id="logConsole" class="bg-slate-950 p-4 rounded-xl flex-grow font-mono text-xs overflow-y-auto text-emerald-500 border border-slate-800 space-y-1">
-                <div>[SYSTEM] Waiting for Arduino...</div>
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <h2 class="text-slate-400 font-bold text-sm uppercase mb-3">Live System Terminal logs</h2>
+            <div id="logConsole" class="bg-slate-950 p-4 rounded-xl h-40 font-mono text-xs overflow-y-auto text-emerald-500 border border-slate-900 space-y-1">
+                <div>[SYSTEM INITIALIZATION] Waiting for Arduino handshake...</div>
             </div>
         </div>
 
     </main>
 
-    <footer class="text-center p-4 text-slate-500 text-xs border-t border-slate-800">
-        Group 8 - Smart Electricity Management System (SEMS)
+    <footer class="text-center p-6 text-slate-600 text-xs border-t border-slate-900 bg-slate-950">
+        SEMS Web Command Center • Built by Group 8 (CoCIS Jinja)
     </footer>
 
     <script>
@@ -52,28 +116,90 @@
         const logConsole = document.getElementById('logConsole');
         const roomStatus = document.getElementById('roomStatus');
         const currentLoad = document.getElementById('currentLoad');
+        const activePower = document.getElementById('activePower');
+        const costEst = document.getElementById('costEst');
 
-        // Append events to our live console
+        // Append events to console
         function appendLog(message) {
             const time = new Date().toLocaleTimeString();
             const logEntry = document.createElement('div');
-            logEntry.innerHTML = `<span class="text-slate-500">[${time}]</span> ${message}`;
+            logEntry.innerHTML = `<span class="text-slate-600">[${time}]</span> ${message}`;
             logConsole.appendChild(logEntry);
-            logConsole.scrollTop = logConsole.scrollHeight; // Auto scroll
+            logConsole.scrollTop = logConsole.scrollHeight;
         }
 
-        // Catch data sent from Node.js server
+        // Send control messages to Node.js backend
+        function toggleRelay(zone) {
+            socket.emit('relay-control', zone);
+            appendLog(`[COMMAND SENT] Manual override toggled for: ${zone.toUpperCase()}`);
+        }
+
+        // Initialize Chart.js Graph
+        const ctx = document.getElementById('energyChart').getContext('2d');
+        const energyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Time labels will push here
+                datasets: [{
+                    label: 'Active Load (Watts)',
+                    data: [],
+                    borderColor: '#10b981',
+                    borderWidth: 2,
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } },
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#64748b' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Receive real-time socket events from your server.js
         socket.on('arduino-data', (data) => {
             appendLog(data);
 
-            // Simple parser matches to update visual components
+            // 1. Parse Status
             if (data.includes("Access Authorized") || data.includes("Room Occupied")) {
                 roomStatus.innerText = "OCCUPIED";
-                roomStatus.className = "text-4xl font-extrabold text-emerald-400";
+                roomStatus.className = "text-3xl font-extrabold text-emerald-400";
             } 
             else if (data.includes("Vacation rule") || data.includes("Room Vacant")) {
                 roomStatus.innerText = "VACANT";
-                roomStatus.className = "text-4xl font-extrabold text-rose-500";
+                roomStatus.className = "text-3xl font-extrabold text-rose-500";
+                
+                // Reset power indicators if room turns off
+                currentLoad.innerText = "0.000";
+                activePower.innerText = "0.0";
+                costEst.innerText = "0.0";
+            }
+
+            // 2. Parse Current draw ("AMPS:X.XX")
+            if (data.startsWith("AMPS:")) {
+                const amps = parseFloat(data.split(":")[1]);
+                const watts = amps * 240.0; 
+                const tariff = 800; // Let's estimate 800 UGX per kWh as an example
+                const ugxPerHour = (watts / 1000.0) * tariff;
+
+                currentLoad.innerText = amps.toFixed(3);
+                activePower.innerText = watts.toFixed(1);
+                costEst.innerText = ugxPerHour.toFixed(1);
+
+                // Update Real-time Chart
+                const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                if (energyChart.data.labels.length > 10) {
+                    energyChart.data.labels.shift();
+                    energyChart.data.datasets[0].data.shift();
+                }
+                energyChart.data.labels.push(now);
+                energyChart.data.datasets[0].data.push(watts);
+                energyChart.update();
             }
         });
     </script>
